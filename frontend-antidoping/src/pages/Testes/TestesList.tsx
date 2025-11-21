@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Trash2, FlaskConical } from 'lucide-react'; // FlaskConical é um ícone legal para exames
+import { Trash2, Plus, AlertCircle, CheckCircle } from 'lucide-react';
 import api from '../../services/api';
 import type { TesteAntidoping } from '../../types';
 
@@ -21,7 +21,7 @@ export const TestesList = () => {
   };
 
   const deletarExame = async (id: number) => {
-    if (confirm("Deseja remover este registro de exame?")) {
+    if (confirm("Deseja remover este registro de exame permanentemente?")) {
       try {
         await api.delete(`/testes-antidoping/${id}`);
         carregarExames();
@@ -32,52 +32,81 @@ export const TestesList = () => {
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold flex items-center gap-2">
-          <FlaskConical /> Controle de Dopagem
-        </h2>
-        <Link to="/testes/novo" className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
-          + Novo Exame
+    <div className="container">
+      {/* Cabeçalho da Página */}
+      <div className="page-header">
+        <div className="page-title">
+          <div className="flex-gap">
+             <h2>Controle de Dopagem</h2>
+          </div>
+          <p>Histórico de testes realizados nos atletas</p>
+        </div>
+        <Link to="/testes/novo" className="btn btn-primary w-auto">
+          <Plus size={18} /> Novo Exame
         </Link>
       </div>
 
-      <div className="bg-white shadow-md rounded overflow-hidden">
-        <table className="min-w-full">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="py-3 px-4 text-left">Data</th>
-              <th className="py-3 px-4 text-left">Atleta (ID)</th>
-              <th className="py-3 px-4 text-left">Resultado</th>
-              <th className="py-3 px-4 text-left">Substância</th>
-              <th className="py-3 px-4 text-center">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {exames.map((exame) => (
-              <tr key={exame.id} className="border-b hover:bg-gray-50">
-                {/* Formata a data simples para exibição */}
-                <td className="py-3 px-4">{new Date(exame.data_exame).toLocaleDateString('pt-BR')}</td>
-                <td className="py-3 px-4 font-mono text-gray-600">ID: {exame.atleta_id}</td>
-                <td className="py-3 px-4">
-                  {exame.resultado_positivo ? (
-                    <span className="bg-red-100 text-red-800 py-1 px-2 rounded-full text-xs font-bold">POSITIVO</span>
-                  ) : (
-                    <span className="bg-green-100 text-green-800 py-1 px-2 rounded-full text-xs font-bold">NEGATIVO</span>
-                  )}
-                </td>
-                <td className="py-3 px-4 text-gray-700">
-                  {exame.substancia_detectada || "-"}
-                </td>
-                <td className="py-3 px-4 text-center">
-                  <button onClick={() => exame.id && deletarExame(exame.id)} className="text-red-500 hover:text-red-700">
-                    <Trash2 size={20} />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* Tabela em Card */}
+      <div className="card">
+        <div className="table-responsive">
+          {exames.length === 0 ? (
+             <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                Nenhum exame registrado ainda.
+             </div>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>ID do Atleta</th>
+                  <th>Resultado</th>
+                  <th>Substância</th>
+                  <th className="text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {exames.map((exame) => (
+                  <tr key={exame.id}>
+                    {/* Data Formatada */}
+                    <td>{new Date(exame.data_exame).toLocaleDateString('pt-BR')}</td>
+                    
+                    <td style={{ fontFamily: 'monospace', color: 'var(--text-muted)' }}>
+                      #{exame.atleta_id}
+                    </td>
+                    
+                    {/* Badge de Status */}
+                    <td>
+                      {exame.resultado_positivo ? (
+                        <span className="badge badge-danger flex-gap" style={{ display: 'inline-flex' }}>
+                          <AlertCircle size={14} /> POSITIVO
+                        </span>
+                      ) : (
+                        <span className="badge badge-success flex-gap" style={{ display: 'inline-flex' }}>
+                          <CheckCircle size={14} /> NEGATIVO
+                        </span>
+                      )}
+                    </td>
+                    
+                    {/* Substância (ou traço se vazio) */}
+                    <td style={{ color: exame.resultado_positivo ? 'var(--danger)' : 'inherit', fontWeight: exame.resultado_positivo ? 600 : 400 }}>
+                      {exame.substancia_detectada || "—"}
+                    </td>
+                    
+                    <td className="text-center">
+                      <button 
+                        onClick={() => exame.id && deletarExame(exame.id)} 
+                        className="btn btn-danger-icon"
+                        title="Excluir registro"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
     </div>
   );

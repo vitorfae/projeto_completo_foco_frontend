@@ -1,14 +1,12 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { ArrowLeft, Save, AlertTriangle } from 'lucide-react';
 import api from '../../services/api';
 import type { Atleta } from '../../types';
 
 export const TestesForm = () => {
   const navigate = useNavigate();
-  
-  // Estado para armazenar a lista de atletas para o Select
   const [atletas, setAtletas] = useState<Atleta[]>([]);
-
   const [formData, setFormData] = useState({
     atleta_id: '',
     data_exame: '',
@@ -16,104 +14,105 @@ export const TestesForm = () => {
     substancia_detectada: ''
   });
 
-  // Carregar atletas assim que a tela abre
   useEffect(() => {
-    api.get('/atletas')
-      .then(res => setAtletas(res.data))
-      .catch(err => console.error("Erro ao carregar atletas", err));
+    api.get('/atletas').then(res => setAtletas(res.data));
   }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
-    // Validação simples
-    if (!formData.atleta_id) {
-      alert("Selecione um atleta!");
-      return;
-    }
+    if (!formData.atleta_id) return alert("Selecione um atleta!");
 
     try {
       await api.post('/testes-antidoping', {
         ...formData,
-        atleta_id: Number(formData.atleta_id) // Garante que vai como número
+        atleta_id: Number(formData.atleta_id)
       });
-      alert('Exame registrado!');
       navigate('/testes');
     } catch (error) {
-      console.error(error);
       alert('Erro ao salvar exame.');
     }
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-lg">
-      <h2 className="text-2xl font-bold mb-4">Registrar Exame Antidoping</h2>
-      
-      <form onSubmit={handleSubmit} className="bg-white p-6 shadow rounded flex flex-col gap-5">
-        
-        {/* SELECT DE ATLETA */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Selecione o Atleta</label>
-          <select 
-            className="w-full border p-2 rounded bg-white"
-            value={formData.atleta_id}
-            onChange={e => setFormData({...formData, atleta_id: e.target.value})}
-            required
-          >
-            <option value="">-- Selecione --</option>
-            {atletas.map(atleta => (
-              <option key={atleta.id} value={atleta.id}>
-                {atleta.nome} (ID: {atleta.id})
-              </option>
-            ))}
-          </select>
+    <div className="container" style={{ maxWidth: '800px' }}>
+      <Link to="/testes" className="back-link">
+        <ArrowLeft size={20} /> Voltar para exames
+      </Link>
+
+      <div className="card">
+        <div className="page-header" style={{ marginBottom: '1.5rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '1rem' }}>
+          <h2>Registrar Exame</h2>
         </div>
 
-        {/* DATA DO EXAME */}
-        <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Data do Exame</label>
-            <input 
+        <form onSubmit={handleSubmit}>
+          <div className="form-row">
+             {/* Select de Atleta */}
+            <div className="form-group">
+              <label>Atleta</label>
+              <select 
+                value={formData.atleta_id}
+                onChange={e => setFormData({...formData, atleta_id: e.target.value})}
+                required
+              >
+                <option value="">-- Selecione o Atleta --</option>
+                {atletas.map(atleta => (
+                  <option key={atleta.id} value={atleta.id}>
+                    {atleta.nome}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Data do Exame */}
+            <div className="form-group">
+              <label>Data da Coleta</label>
+              <input 
                 type="date" 
-                className="w-full border p-2 rounded"
                 value={formData.data_exame}
                 onChange={e => setFormData({...formData, data_exame: e.target.value})}
                 required 
-            />
-        </div>
+              />
+            </div>
+          </div>
 
-        {/* CHECKBOX RESULTADO */}
-        <div className="flex items-center gap-2 p-3 border rounded bg-gray-50">
-            <input 
-                type="checkbox" 
-                id="resultado"
-                className="w-5 h-5 text-blue-600"
-                checked={formData.resultado_positivo}
-                onChange={e => setFormData({...formData, resultado_positivo: e.target.checked})}
-            />
-            <label htmlFor="resultado" className="font-medium text-gray-700 select-none cursor-pointer">
-                Resultado Positivo (Doping detectado)
-            </label>
-        </div>
+          {/* Checkbox Customizado */}
+          <div className="form-group">
+            <label>Resultado da Análise</label>
+            <div className="checkbox-wrapper">
+                <input 
+                    type="checkbox" 
+                    id="res_positivo"
+                    checked={formData.resultado_positivo}
+                    onChange={e => setFormData({...formData, resultado_positivo: e.target.checked})}
+                />
+                <label htmlFor="res_positivo" style={{ marginBottom: 0, cursor: 'pointer' }}>
+                    Detectado Resultado Positivo (Doping)
+                </label>
+            </div>
+          </div>
 
-        {/* SUBSTÂNCIA (Só aparece/habilita se for positivo, opcionalmente) */}
-        {formData.resultado_positivo && (
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Substância Detectada</label>
+          {/* Campo Condicional */}
+          {formData.resultado_positivo && (
+            <div className="form-group" style={{ animation: 'fadeIn 0.3s ease' }}>
+                <label style={{ color: 'var(--danger)' }} className="flex-gap">
+                    <AlertTriangle size={16} /> Substância Detectada
+                </label>
                 <input 
                     type="text" 
-                    placeholder="Ex: Trembolona, Clembuterol..."
-                    className="w-full border p-2 rounded border-red-300 focus:ring-red-500"
+                    placeholder="Informe a substância..."
+                    style={{ borderColor: 'var(--danger-bg)' }}
                     value={formData.substancia_detectada}
                     onChange={e => setFormData({...formData, substancia_detectada: e.target.value})}
-                    required={formData.resultado_positivo}
+                    required
                 />
             </div>
-        )}
+          )}
 
-        <button type="submit" className="bg-indigo-600 text-white p-3 rounded font-bold hover:bg-indigo-700 mt-2">
-          Salvar Registro
-        </button>
-      </form>
+          <button type="submit" className="btn btn-primary" style={{ marginTop: '1rem' }}>
+            <Save size={20} /> Finalizar Cadastro
+          </button>
+        </form>
+      </div>
     </div>
   );
 };
