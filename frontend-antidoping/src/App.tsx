@@ -5,6 +5,7 @@ import { AtletaForm } from './pages/Atletas/AtletaForm';
 // Importe os novos componentes
 import { TestesList } from './pages/Testes/TestesList';
 import { TestesForm } from './pages/Testes/TestesForm'
+import './App.css'
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           {/* Rotas de Atletas */}
           <Route path="/atletas" element={<AtletasList />} />
           <Route path="/atletas/novo" element={<AtletaForm />} />
+          <Route path="/atletas/editar/:id" element={<AtletaForm />} />
           
           {/* Rotas de Testes Antidoping */}
           <Route path="/testes" element={<TestesList />} />

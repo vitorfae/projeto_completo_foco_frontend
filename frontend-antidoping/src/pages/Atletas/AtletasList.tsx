@@ -59,7 +59,13 @@ export const AtletasList = () => {
                   <td>{atleta.idade} anos</td>
                   <td>{atleta.altura}m / {atleta.peso}kg</td>
                   <td className="text-center">
-                    <button className="btn btn-icon"><Edit size={18} /></button>
+                    <Link 
+                      to={`/atletas/editar/${atleta.id}`} 
+                      className="btn btn-icon"
+                      title="Editar Atleta"
+                    >
+                      <Edit size={18} />
+                    </Link>
                     <button 
                         onClick={() => atleta.id && deletarAtleta(atleta.id)} 
                         className="btn btn-danger-icon"

@@ -1,10 +1,12 @@
-import { useState, type FormEvent, type ChangeEvent } from 'react';
+import { useState, useEffect, type FormEvent, type ChangeEvent } from 'react';
 import api from '../../services/api';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useParams } from 'react-router-dom'; // Adicionamos useParams
 import { ArrowLeft, Save } from 'lucide-react';
 
 export const AtletaForm = () => {
   const navigate = useNavigate();
+  const { id } = useParams(); // Pega o ID da URL (se existir)
+  
   const [formData, setFormData] = useState({
     nome: '',
     idade: '',
@@ -13,21 +15,52 @@ export const AtletaForm = () => {
     esporte: ''
   });
 
+  // useEffect para carregar dados caso seja Edição
+  useEffect(() => {
+    if (id) {
+      api.get(`/atletas/${id}`)
+        .then((response) => {
+          // Preenche o formulário com os dados que vieram do banco
+          setFormData({
+             nome: response.data.nome,
+             idade: response.data.idade,
+             altura: response.data.altura,
+             peso: response.data.peso,
+             esporte: response.data.esporte
+          });
+        })
+        .catch((error) => {
+            console.error(error);
+            alert("Erro ao buscar dados do atleta.");
+        });
+    }
+  }, [id]);
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    try {
-      const payload = {
-        ...formData,
-        idade: Number(formData.idade),
-        altura: Number(formData.altura),
-        peso: Number(formData.peso)
-      };
+    
+    // Converte os números
+    const payload = {
+      ...formData,
+      idade: Number(formData.idade),
+      altura: Number(formData.altura),
+      peso: Number(formData.peso)
+    };
 
-      await api.post('/atletas', payload);
+    try {
+      if (id) {
+        // Se tem ID, é PUT (Atualizar)
+        await api.put(`/atletas/${id}`, payload);
+        alert('Atleta atualizado com sucesso!');
+      } else {
+        // Se não tem ID, é POST (Criar)
+        await api.post('/atletas', payload);
+        alert('Atleta cadastrado com sucesso!');
+      }
       navigate('/atletas');
     } catch (error) {
       console.error("Erro ao salvar", error);
-      alert('Erro ao salvar dados do atleta.');
+      alert('Erro ao salvar dados.');
     }
   };
 
@@ -37,35 +70,34 @@ export const AtletaForm = () => {
 
   return (
     <div className="container" style={{ maxWidth: '800px' }}>
-      {/* Link de Voltar */}
       <Link to="/atletas" className="back-link">
         <ArrowLeft size={20} /> Voltar para lista
       </Link>
 
       <div className="card">
         <div className="page-header" style={{ marginBottom: '1.5rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '1rem' }}>
-          <h2>Cadastrar Atleta</h2>
+          {/* Título dinâmico */}
+          <h2>{id ? 'Editar Atleta' : 'Cadastrar Atleta'}</h2>
         </div>
 
         <form onSubmit={handleSubmit}>
-          {/* Nome Completo */}
           <div className="form-group">
             <label>Nome Completo</label>
             <input 
               name="nome" 
-              placeholder="Ex: Ana Silva" 
+              value={formData.nome} // Importante: value ligado ao state
               onChange={handleChange} 
               required 
             />
           </div>
 
-          {/* Linha Dupla: Idade e Esporte */}
           <div className="form-row">
             <div className="form-group">
               <label>Idade</label>
               <input 
                 name="idade" 
                 type="number" 
+                value={formData.idade}
                 onChange={handleChange} 
                 required 
               />
@@ -74,14 +106,13 @@ export const AtletaForm = () => {
               <label>Esporte / Modalidade</label>
               <input 
                 name="esporte" 
-                placeholder="Ex: Atletismo" 
+                value={formData.esporte}
                 onChange={handleChange} 
                 required 
               />
             </div>
           </div>
 
-          {/* Linha Dupla: Altura e Peso */}
           <div className="form-row">
             <div className="form-group">
               <label>Altura (metros)</label>
@@ -89,7 +120,7 @@ export const AtletaForm = () => {
                 name="altura" 
                 type="number" 
                 step="0.01" 
-                placeholder="1.75" 
+                value={formData.altura}
                 onChange={handleChange} 
                 required 
               />
@@ -100,7 +131,7 @@ export const AtletaForm = () => {
                 name="peso" 
                 type="number" 
                 step="0.1" 
-                placeholder="68.5" 
+                value={formData.peso}
                 onChange={handleChange} 
                 required 
               />
@@ -108,7 +139,7 @@ export const AtletaForm = () => {
           </div>
 
           <button type="submit" className="btn btn-primary" style={{ marginTop: '1rem' }}>
-            <Save size={20} /> Salvar Registro
+            <Save size={20} /> {id ? 'Salvar Alterações' : 'Salvar Registro'}
           </button>
         </form>
       </div>
