@@ -115,7 +115,7 @@ export const AtletaForm = () => {
 
           <div className="form-row">
             <div className="form-group">
-              <label>Altura (metros)</label>
+              <label>Altura (cm)</label>
               <input 
                 name="altura" 
                 type="number" 

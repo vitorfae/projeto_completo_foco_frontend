@@ -57,7 +57,7 @@ export const AtletasList = () => {
                   <td style={{fontWeight: 600}}>{atleta.nome}</td>
                   <td><span className="badge">{atleta.esporte}</span></td>
                   <td>{atleta.idade} anos</td>
-                  <td>{atleta.altura}m / {atleta.peso}kg</td>
+                  <td>{atleta.altura}cm / {atleta.peso}kg</td>
                   <td className="text-center">
                     <Link 
                       to={`/atletas/editar/${atleta.id}`} 
